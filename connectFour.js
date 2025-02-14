@@ -43,7 +43,11 @@ function draw() {
     drawBoard(); // Call the function to draw the game board
     if (checkWin()) { // If a win is detected
         noLoop(); // Stop the game from continuously drawing
-        setTimeout(() => alert(currentPlayer === 1 ? "Player wins!" : "Computer wins!"), 100); // Show winner message after a short delay
+        if (currentPlayer === 1) { // If the player wins
+            setTimeout(() => alert("Congratulations! You win!"), 100); // Display custom message for Player win
+        } else { // If the computer wins
+            setTimeout(() => alert("Oops! The computer wins! Better luck next time."), 100); // Display custom message for Computer win
+        }
     }
 }
 
@@ -101,25 +105,114 @@ function mousePressed() {
 /**
  * computerMove()
  * 
- * Handles the computer's move. The computer randomly selects an available column 
- * and places its piece in the lowest available row in that column. The computer 
- * then checks if it won, and if not, it switches turns back to the player.
+ * Handles the computer's move. The computer now tries to block the player's 
+ * winning move or try to win itself if possible.
  */
 function computerMove() {
-    let col;
-    do {
-        col = floor(random(cols)); // Randomly choose a column
-    } while (board[col][0] !== 0); // Ensure the column is not full
-    
-    for (let r = rows - 1; r >= 0; r--) { // Start from the bottom row
-        if (board[col][r] === 0) { // If the cell is empty
-            board[col][r] = currentPlayer; // Place the computer's piece
-            break; // Exit loop after placing the piece
+    let bestCol = -1;
+    let bestScore = -Infinity;
+
+    // Try to block player or win
+    for (let col = 0; col < cols; col++) {
+        if (board[col][0] === 0) { // If the column is not full
+            // Simulate player's move
+            let row = getEmptyRow(col);
+            board[col][row] = -1; // Computer places a piece
+            let score = evaluateBoard(); // Evaluate the board's state after move
+
+            // Undo the move
+            board[col][row] = 0;
+            
+            // If the score is higher, this is the best move
+            if (score > bestScore) {
+                bestScore = score;
+                bestCol = col;
+            }
         }
     }
+    
+    // Now that the best column is found, place the computer's piece
+    let row = getEmptyRow(bestCol);
+    board[bestCol][row] = -1;
+
     if (!checkWin()) { // If the computer didn't win, switch turns
         currentPlayer *= -1; // Switch turn: -1 (computer) to 1 (player)
     }
+}
+
+/**
+ * getEmptyRow()
+ * 
+ * Finds the lowest empty row in a given column.
+ * 
+ * @param {number} col - The column to check
+ * @returns {number} - The row index where the piece can be placed
+ */
+function getEmptyRow(col) {
+    for (let r = rows - 1; r >= 0; r--) {
+        if (board[col][r] === 0) {
+            return r; // Return the first empty row
+        }
+    }
+    return -1; // Should not reach here if column is not full
+}
+
+/**
+ * evaluateBoard()
+ * 
+ * A simple evaluation function that looks for potential winning or blocking moves.
+ * A higher score means the computer is in a better position.
+ * 
+ * @returns {number} - The evaluation score of the current board state
+ */
+function evaluateBoard() {
+    let score = 0;
+
+    // Check for potential winning moves for the computer
+    for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+            if (board[c][r] === -1) {
+                score += evaluateDirection(c, r, 1, 0); // Horizontal
+                score += evaluateDirection(c, r, 0, 1); // Vertical
+                score += evaluateDirection(c, r, 1, 1); // Diagonal ↘
+                score += evaluateDirection(c, r, 1, -1); // Diagonal ↗
+            }
+        }
+    }
+
+    return score;
+}
+
+/**
+ * evaluateDirection()
+ * 
+ * Evaluates how many consecutive pieces are aligned in a direction.
+ * A higher value represents a stronger position for the AI.
+ * 
+ * @param {number} c - Column index of the current piece
+ * @param {number} r - Row index of the current piece
+ * @param {number} dc - Directional change for columns
+ * @param {number} dr - Directional change for rows
+ * @returns {number} - The number of consecutive pieces
+ */
+function evaluateDirection(c, r, dc, dr) {
+    let count = 0;
+    let consecutive = 0;
+
+    for (let i = 0; i < 4; i++) {
+        let col = c + i * dc;
+        let row = r + i * dr;
+
+        if (col >= 0 && col < cols && row >= 0 && row < rows) {
+            if (board[col][row] === -1) {
+                count++;
+            } else if (board[col][row] === 1) {
+                consecutive++;
+            }
+        }
+    }
+
+    return count - consecutive; // Favor more computer pieces, block player pieces
 }
 
 /**
