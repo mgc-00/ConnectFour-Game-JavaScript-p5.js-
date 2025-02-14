@@ -3,6 +3,7 @@
 Connect Four Game (JavaScript p5.js)
 
 A simple Connect Four game where a player competes against a computer. The game is built using p5.js and features a graphical interface with an interactive board. The objective is to get four of your pieces in a row, either horizontally, vertically, or diagonally.
+
 Features
 
     Player vs Computer: Play against a simple AI that randomly drops pieces into the columns.
