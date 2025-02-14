@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Meta tag for character encoding to ensure proper display of special characters -->
+    <meta charset="UTF-8">
+    <!-- Meta tag for viewport settings, making the page responsive on different devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title of the webpage shown in the browser tab -->
+    <title>Connect Four</title>
+
+    <!-- Linking to the p5.js library from a CDN for creating interactive graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+
+    <!-- Linking to the external JavaScript file (connectFour.js) that contains the game logic -->
+    <!-- The defer attribute ensures that the script is executed after the HTML has been parsed -->
+    <script src="connectFour.js" defer></script>
+
+    <style>
+        /* CSS styles to center the game canvas in the middle of the screen */
+        body {
+            /* Flexbox to center content horizontally and vertically */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Make the body take the full height of the viewport */
+            height: 100vh;
+            /* Set a light background color for the webpage */
+            background-color: #f8f9fa;
+            /* Remove default margin for body */
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Inline script to create a new p5 instance, initializing the game -->
+    <script>
+        /**
+         * Connect Four Game
+         * 
+         * A simple implementation of the Connect Four game where a player competes 
+         * against a computer. The player drops red pieces and the computer drops yellow
+         * pieces in a grid. The goal is to connect four of your pieces in a row, either
+         * horizontally, vertically, or diagonally.
+         * 
+         * Game Features:
+         * - Player vs Computer: The player (red) faces off against a simple AI (yellow).
+         * - Interactive Game Board: Click on columns to drop your pieces into the board.
+         * - Win Detection: Checks for horizontal, vertical, and diagonal wins.
+         * - Responsive UI: The game adapts to different screen sizes.
+         * ver 1.0
+         * Developed with p5.js.
+         * @author MGC https://github.com/mgc-00/mgc-git-repo 10/02/2025
+         */
+        new p5(); // Initializes p5.js, which runs the sketch setup and draw functions
+    </script>
+</body>
+
+</html>
