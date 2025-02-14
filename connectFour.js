@@ -1,269 +1,181 @@
-/**
- * Connect Four Game
- * 
- * A simple implementation of the Connect Four game where a player competes 
- * against a computer. The player drops red pieces and the computer drops yellow
- * pieces in a grid. The goal is to connect four of your pieces in a row, either
- * horizontally, vertically, or diagonally.
- * 
- * Game Features:
- * - Player vs Computer: The player (red) faces off against a simple AI (yellow).
- * - Interactive Game Board: Click on columns to drop your pieces into the board.
- * - Win Detection: Checks for horizontal, vertical, and diagonal wins.
- * - Responsive UI: The game adapts to different screen sizes.
- * ver 1.0
- * Developed with p5.js.
- * @author MGC https://github.com/mgc-00/mgc-git-repo 10/02/2025
- */
-
 let board;
-const cols = 7; // Number of columns in the game grid
-const rows = 6; // Number of rows in the game grid
+const cols = 7;
+const rows = 6;
 let currentPlayer = 1; // 1 for player (red), -1 for computer (yellow)
+let gameOver = false;
 
-/**
- * setup()
- * 
- * Initializes the game by creating the canvas and setting up the game board.
- * This function runs once at the beginning.
- */
 function setup() {
-    createCanvas(windowWidth, windowHeight); // Set canvas size to window size
-    board = Array(cols).fill().map(() => Array(rows).fill(0)); // Initialize empty board (0 represents empty spaces)
+    createCanvas(windowWidth, windowHeight);
+    board = Array(cols).fill().map(() => Array(rows).fill(0)); // Initialize the board
 }
 
-/**
- * draw()
- * 
- * Continuously runs to update the game state and redraw the board. 
- * It checks for a win after every draw and stops the game if there is a winner.
- */
+let winner = 0;
+
 function draw() {
-    background(255); // White background for the canvas
-    drawBoard(); // Call the function to draw the game board
-    if (checkWin()) { // If a win is detected
-        noLoop(); // Stop the game from continuously drawing
-        if (currentPlayer === 1) { // If the player wins
-            setTimeout(() => alert("Congratulations! You win!"), 100); // Display custom message for Player win
-        } else { // If the computer wins
-            setTimeout(() => alert("Oops! The computer wins! Better luck next time."), 100); // Display custom message for Computer win
-        }
+    background(255); // Redraw the background
+
+    // Draw the board and the pieces
+    drawBoard();
+
+    // If the game is over, stop all actions
+    if (gameOver) {
+        return;
     }
 }
 
-/**
- * drawBoard()
- * 
- * Draws the game board, including the background, grid, and pieces (red or yellow).
- * It adjusts the board's size to fit within the available window dimensions.
- */
 function drawBoard() {
-    let cellSize = min(width / cols, height / rows) * 0.9; // Calculate cell size to fit the board within the window
-    let offsetX = (width - cellSize * cols) / 2; // Horizontal offset to center the board
-    let offsetY = (height - cellSize * rows) / 2; // Vertical offset to center the board
-    fill(0, 0, 255); // Blue color for the border
-    rect(offsetX - cellSize * 0.05, offsetY - cellSize * 0.05, 
-         cellSize * cols + cellSize * 0.1, cellSize * rows + cellSize * 0.1, 20); // Draw the outer border with rounded corners
+    let cellSize = min(width / cols, height / rows) * 0.9;
+    let offsetX = (width - cellSize * cols) / 2;
+    let offsetY = (height - cellSize * rows) / 2;
 
-    // Loop through each column and row to draw the individual pieces (red, yellow, or empty)
+    // Draw board border
+    fill(0, 0, 255);
+    rect(offsetX - cellSize * 0.05, offsetY - cellSize * 0.05,
+         cellSize * cols + cellSize * 0.1, cellSize * rows + cellSize * 0.1, 20);
+
+    // Draw pieces (red, yellow, or empty)
     for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
-            // Color the cell based on the value (red for player, yellow for computer, grey for empty)
             fill(board[c][r] === 1 ? 'red' : board[c][r] === -1 ? 'yellow' : 200);
-            // Draw each piece as a circle at the calculated position
             ellipse(offsetX + c * cellSize + cellSize / 2, offsetY + r * cellSize + cellSize / 2, cellSize * 0.8);
         }
     }
 }
 
-/**
- * mousePressed()
- * 
- * Handles player input. When the player clicks on a column, the function places 
- * the player's piece in the lowest available row of that column. It also checks 
- * if the move results in a win and switches turns to the computer if the game 
- * is not over.
- */
 function mousePressed() {
-    let cellSize = min(width / cols, height / rows) * 0.9; // Calculate cell size
-    let offsetX = (width - cellSize * cols) / 2; // Horizontal offset
-    let col = floor((mouseX - offsetX) / cellSize); // Determine the clicked column based on mouseX position
-    if (col >= 0 && col < cols) { // Ensure the column is valid
-        for (let r = rows - 1; r >= 0; r--) { // Start from the bottom row
-            if (board[col][r] === 0) { // If the cell is empty
-                board[col][r] = currentPlayer; // Place the player's piece
-                if (!checkWin()) { // If the player didn't win, switch turns
-                    currentPlayer *= -1; // Switch turn: 1 (player) to -1 (computer)
-                    computerMove(); // Let the computer make a move
+    if (gameOver || currentPlayer !== 1) return; // Block player move if game is over or it's not the player's turn
+
+    let cellSize = min(width / cols, height / rows) * 0.9;
+    let offsetX = (width - cellSize * cols) / 2;
+    let col = floor((mouseX - offsetX) / cellSize);
+
+    if (col >= 0 && col < cols) {
+        for (let r = rows - 1; r >= 0; r--) {
+            if (board[col][r] === 0) { // Find the first empty row in the column
+                board[col][r] = currentPlayer;
+                if (checkWin()) { // Check for win after player's move
+                    gameOver = true;
+                    winner = 1;
+                    setTimeout(() => alert("Congratulations! You win! Press ctrl+R to restart."), 100);
+                } else if (isBoardFull()) { // Check for a draw
+                    gameOver = true;
+                    setTimeout(() => alert("It's a draw! Press ctrl+R to restart."), 100);
+                } else {
+                    currentPlayer = -1; // Switch to computer's turn
+                    setTimeout(computerMove, 500); // Delay computer move for a better user experience
                 }
-                break; // Exit loop after placing the piece
+                break; // Exit the loop after placing the player's piece
             }
         }
     }
 }
 
-/**
- * computerMove()
- * 
- * Handles the computer's move. The computer now tries to block the player's 
- * winning move or try to win itself if possible.
- */
 function computerMove() {
-    let bestCol = -1;
-    let bestScore = -Infinity;
+    if (gameOver || currentPlayer !== -1) return; // Block computer move if game is over or it's not computer's turn
 
-    // Try to block player or win
-    for (let col = 0; col < cols; col++) {
-        if (board[col][0] === 0) { // If the column is not full
-            // Simulate player's move
-            let row = getEmptyRow(col);
-            board[col][row] = -1; // Computer places a piece
-            let score = evaluateBoard(); // Evaluate the board's state after move
+    let col;
 
-            // Undo the move
-            board[col][row] = 0;
-            
-            // If the score is higher, this is the best move
-            if (score > bestScore) {
-                bestScore = score;
-                bestCol = col;
-            }
+    // Step 1: Check if the computer can win
+    col = findWinningMove(-1);
+    if (col !== -1) {
+        makeMove(col, -1);
+        if (checkWin()) {
+            gameOver = true;
+            winner = -1;
+            setTimeout(() => alert("Oops! The computer wins! Better luck next time. Press ctrl+R to restart."), 100);
         }
+        return;
     }
-    
-    // Now that the best column is found, place the computer's piece
-    let row = getEmptyRow(bestCol);
-    board[bestCol][row] = -1;
 
-    if (!checkWin()) { // If the computer didn't win, switch turns
-        currentPlayer *= -1; // Switch turn: -1 (computer) to 1 (player)
+    // Step 2: Block the player's winning move
+    col = findWinningMove(1);
+    if (col !== -1) {
+        makeMove(col, -1);
+        if (checkWin()) {
+            gameOver = true;
+            winner = -1;
+            setTimeout(() => alert("Oops! The computer wins! Better luck next time. Press ctrl+R to restart."), 100);
+        }
+        return;
     }
+
+    // Step 3: If no winning or blocking move, make a random move
+    do {
+        col = floor(random(cols));
+    } while (board[col][0] !== 0); // Ensure the column is not full
+
+    makeMove(col, -1);
+
+    if (checkWin()) {
+        gameOver = true;
+        winner = -1;
+        setTimeout(() => alert("Oops! The computer wins! Better luck next time. Press ctrl+R to restart."), 100);
+    } else if (isBoardFull()) {
+        gameOver = true;
+        setTimeout(() => alert("It's a draw! Press ctrl+R to restart."), 100);
+    }
+
+    currentPlayer = 1; // Switch back to player's turn
 }
 
-/**
- * getEmptyRow()
- * 
- * Finds the lowest empty row in a given column.
- * 
- * @param {number} col - The column to check
- * @returns {number} - The row index where the piece can be placed
- */
-function getEmptyRow(col) {
+function makeMove(col, player) {
     for (let r = rows - 1; r >= 0; r--) {
         if (board[col][r] === 0) {
-            return r; // Return the first empty row
+            board[col][r] = player;
+            break;
         }
     }
-    return -1; // Should not reach here if column is not full
 }
 
-/**
- * evaluateBoard()
- * 
- * A simple evaluation function that looks for potential winning or blocking moves.
- * A higher score means the computer is in a better position.
- * 
- * @returns {number} - The evaluation score of the current board state
- */
-function evaluateBoard() {
-    let score = 0;
-
-    // Check for potential winning moves for the computer
-    for (let c = 0; c < cols; c++) {
-        for (let r = 0; r < rows; r++) {
-            if (board[c][r] === -1) {
-                score += evaluateDirection(c, r, 1, 0); // Horizontal
-                score += evaluateDirection(c, r, 0, 1); // Vertical
-                score += evaluateDirection(c, r, 1, 1); // Diagonal ↘
-                score += evaluateDirection(c, r, 1, -1); // Diagonal ↗
-            }
-        }
-    }
-
-    return score;
-}
-
-/**
- * evaluateDirection()
- * 
- * Evaluates how many consecutive pieces are aligned in a direction.
- * A higher value represents a stronger position for the AI.
- * 
- * @param {number} c - Column index of the current piece
- * @param {number} r - Row index of the current piece
- * @param {number} dc - Directional change for columns
- * @param {number} dr - Directional change for rows
- * @returns {number} - The number of consecutive pieces
- */
-function evaluateDirection(c, r, dc, dr) {
-    let count = 0;
-    let consecutive = 0;
-
-    for (let i = 0; i < 4; i++) {
-        let col = c + i * dc;
-        let row = r + i * dr;
-
-        if (col >= 0 && col < cols && row >= 0 && row < rows) {
-            if (board[col][row] === -1) {
-                count++;
-            } else if (board[col][row] === 1) {
-                consecutive++;
-            }
-        }
-    }
-
-    return count - consecutive; // Favor more computer pieces, block player pieces
-}
-
-/**
- * checkWin()
- * 
- * Checks if there is a winner on the board by scanning for four consecutive 
- * pieces in a row, column, or diagonal. If a winner is found, it returns true.
- * Otherwise, it returns false.
- * 
- * @returns {boolean} true if a player has won, false otherwise
- */
 function checkWin() {
     for (let c = 0; c < cols; c++) {
         for (let r = 0; r < rows; r++) {
-            if (board[c][r] !== 0) { // Skip empty cells
-                // Check horizontal, vertical, and diagonal directions for a win
-                if (checkDirection(c, r, 1, 0) || // Horizontal
-                    checkDirection(c, r, 0, 1) || // Vertical
-                    checkDirection(c, r, 1, 1) || // Diagonal (↘)
-                    checkDirection(c, r, 1, -1)) { // Diagonal (↗)
+            if (board[c][r] !== 0) {
+                if (checkDirection(c, r, 1, 0) || checkDirection(c, r, 0, 1) ||
+                    checkDirection(c, r, 1, 1) || checkDirection(c, r, 1, -1)) {
                     return true; // Win found
                 }
             }
         }
     }
-    return false; // No winner
+    return false;
 }
 
-/**
- * checkDirection()
- * 
- * Checks for four consecutive pieces in a specific direction (horizontal, vertical, or diagonal).
- * It iterates over the board in the specified direction (dc, dr) and counts how many consecutive
- * pieces belong to the current player. If there are four in a row, it returns true.
- * 
- * @param {number} c - Column index of the current piece
- * @param {number} r - Row index of the current piece
- * @param {number} dc - Directional change for columns (1 for right, 0 for down)
- * @param {number} dr - Directional change for rows (0 for right, 1 for down)
- * @returns {boolean} true if there are four consecutive pieces in the given direction, false otherwise
- */
 function checkDirection(c, r, dc, dr) {
     let count = 0;
-    for (let i = 0; i < 4; i++) { // Check for four pieces in a row
-        let col = c + i * dc;
-        let row = r + i * dr;
-        if (col >= 0 && col < cols && row >= 0 && row < rows && board[col][row] === currentPlayer) {
-            count++; // Increment count if the piece matches the current player
-        } else {
-            break; // Stop if there's no match
+    let player = board[c][r];
+    for (let i = 0; i < 4; i++) {
+        let x = c + dc * i;
+        let y = r + dr * i;
+        if (x < 0 || x >= cols || y < 0 || y >= rows || board[x][y] !== player) {
+            return false;
+        }
+        count++;
+    }
+    return count === 4; // Return true if four in a row
+}
+
+function findWinningMove(player) {
+    for (let c = 0; c < cols; c++) {
+        for (let r = rows - 1; r >= 0; r--) {
+            if (board[c][r] === 0) {
+                board[c][r] = player;
+                if (checkWin()) {
+                    board[c][r] = 0;
+                    return c; // Return column where the winning move is found
+                }
+                board[c][r] = 0; // Reset the board if no win
+            }
         }
     }
-    return count === 4; // Return true if there are exactly four consecutive pieces
+    return -1; // No winning move found
+}
+
+function isBoardFull() {
+    for (let c = 0; c < cols; c++) {
+        if (board[c][0] === 0) {
+            return false; // If there's an empty cell in the top row, the board is not full
+        }
+    }
+    return true; // Board is full
 }
