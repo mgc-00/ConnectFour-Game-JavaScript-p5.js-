@@ -1,3 +1,22 @@
+/**
+ * Connect Four Game
+ * 
+ * A simple implementation of the Connect Four game where a player competes 
+ * against a computer. The player drops red pieces and the computer drops yellow
+ * pieces in a grid. The goal is to connect four of your pieces in a row, either 
+ * horizontally, vertically, or diagonally.
+ * 
+ * Game Features:
+ * - Player vs Computer: The player (red) faces off against a simple AI (yellow).
+ * - Interactive Game Board: Click on columns to drop your pieces into the board.
+ * - Win Detection: Checks for horizontal, vertical, and diagonal wins.
+ * - Responsive UI: The game adapts to different screen sizes.
+ * ver 1.0
+ * Developed with p5.js.
+ * @author MGC https://github.com/mgc-00/mgc-git-repo 10/02/2025
+ */
+
+
 let board;
 const cols = 7;
 const rows = 6;
