@@ -1,6 +1,6 @@
 @author MGC https://github.com/mgc-00/mgc-git-repo 10/02/2025
 
-Connect Four Game (JavaScript p5.js)
+Connect Four Game (JavaScript p5.js ver.1
 
 A simple Connect Four game where a player competes against a computer. The game is built using p5.js and features a graphical interface with an interactive board. The objective is to get four of your pieces in a row, either horizontally, vertically, or diagonally.
 
